@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: mybook-postgres-build
+    environment:
+      POSTGRES_DB: mybook
+      POSTGRES_USER: prashant
+      POSTGRES_PASSWORD: +yvN1znJ6bAX6eyr850VYg==
+    ports:
+      - "5435:5432"
+    volumes:
+      - mybook_pg_data:/var/lib/postgresql/data
+     
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mybook"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mybook_pg_data:
