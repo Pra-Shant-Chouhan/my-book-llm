@@ -1,6 +1,5 @@
-import {flattenError, type ZodError} from "zod";
+import { flattenError, type ZodError } from "zod";
 
-
-export function zodFiledErrors(error:ZodError): Record<string, string[]> {
+export function getZodFieldErrors(error: ZodError) {
     return flattenError(error).fieldErrors;
 }
