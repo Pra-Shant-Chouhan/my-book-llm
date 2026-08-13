@@ -1,10 +1,17 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/async-handler.js";
-import { createSource, listSources } from "../controllers/source.controller.js";
+import { createSource, listSources, uploadPdf } from "../controllers/source.controller.js";
 import { bulkDeleteSourcesSchema } from "../validators/source.validator.js";
+import { uploadSinglePdf } from "../middleware/upload.middleware.js";
 
 export const sourceRoutes = Router({mergeParams:true});
 
+sourceRoutes.post(
+    "/upload",
+    uploadSinglePdf,
+    asyncHandler(uploadPdf),
+);
+sourceRoutes.post("/import/website", asyncHandler(importWebsite));
 sourceRoutes.get("/", asyncHandler(listSources));
 sourceRoutes.post("/", asyncHandler(createSource));
 // sourceRoutes.post("/bulk-delete", asyncHandler(bulkDeleteSourcesSchema));
