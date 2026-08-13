@@ -14,6 +14,7 @@ import {
     workspaceIdParamSchema,
 } from "../validators/workspace.validator.js";
 import type { ZodSchema } from "zod";
+import { getUserId } from "../lib/getUserId.js";
 
 function validate<T>(schema: ZodSchema<T>, data: unknown, message = "Validation failed"): T {
     const parsed = schema.safeParse(data);
@@ -28,15 +29,6 @@ function validate<T>(schema: ZodSchema<T>, data: unknown, message = "Validation 
     return parsed.data;
 }
 
-function getUserId(req: Request): string {
-    const userId = req.session?.user?.id;
-
-    if (!userId) {
-        throw new UnauthorizedError("Unauthorized");
-    }
-
-    return userId;
-}
 
 export async function listWorkspaces(req: Request, res: Response) {
     const userId = getUserId(req);

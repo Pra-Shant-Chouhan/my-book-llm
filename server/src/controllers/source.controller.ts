@@ -2,8 +2,9 @@ import type { Request, Response } from "express";
 import { ValidationError } from "../types/app-error.js";
 import { getZodFieldErrors } from "../utils/zod-error.js";
 import { workspaceIdParamSchema } from "../validators/workspace.validator.js";
-import { createSourceSchema, importWebsiteSchema, listSourcesQuerySchema, sourceIdParamSchema } from "../validators/source.validator.js";
-import { createTextOrMarkdownSource, importWebsiteSource, listSourcesForWorkspace, uploadPdfSource } from "../services/source.service.js";
+import { bulkDeleteSourcesSchema, createSourceSchema, importWebsiteSchema, importYoutubeSchema, listSourcesQuerySchema, sourceIdParamSchema } from "../validators/source.validator.js";
+import { createTextOrMarkdownSource, importWebsiteSource, importYoutubeSource, listSourcesForWorkspace, uploadPdfSource } from "../services/source.service.js";
+import { getUserId } from "../lib/getUserId.js";
 
 function parseWorkspaceId(params: Request["params"]) {
     const parsed = workspaceIdParamSchema.safeParse(params);
@@ -73,7 +74,7 @@ export async function listSources(req: Request, res: Response) {
     const filters = parseListQuery(req.query);
     const sources = await listSourcesForWorkspace(
         workspaceId,
-        req.session.user.id,
+        getUserId(req),
         filters,
     );
     res.json(sources);
@@ -85,7 +86,7 @@ export async function createSource(req: Request, res: Response) {
     const input = parseCreateBody(req.body);
     const source = await createTextOrMarkdownSource(
         workspaceId,
-        req.session.user.id,
+        getUserId(req),
         input,
     );
     res.status(201).json(source);
@@ -103,7 +104,7 @@ export async function uploadPdf(req: Request, res: Response) {
 
     const source = await uploadPdfSource(
         workspaceId,
-        req.session.user.id,
+        getUserId(req),
         req.file,
         title,
     );
@@ -116,7 +117,18 @@ export async function importWebsite(req: Request, res: Response) {
     const input = importWebsiteSchema.parse(req.body);
     const source = await importWebsiteSource(
         workspaceId,
-        req.session.user.id,
+        getUserId(req),
+        input,
+    );
+    res.status(201).json(source);
+}
+
+export async function importYoutube(req: Request, res: Response) {
+    const { workspaceId } = workspaceIdParamSchema.parse(req.params);
+    const input = importYoutubeSchema.parse(req.body);
+    const source = await importYoutubeSource(
+        workspaceId,
+        getUserId(req),
         input,
     );
     res.status(201).json(source);
