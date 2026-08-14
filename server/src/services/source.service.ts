@@ -1,6 +1,6 @@
 import { uploadPdfToCloudinary } from "../lib/cloudinary.js";
 import { scrapeWebsite } from "../lib/firecrawl.js";
-import { extractPdfFromBuffer } from "../lib/pad.js";
+import { extractPdfFromBuffer } from "../lib/pdf.js";
 import { fetchYoutubeTranscript } from "../lib/youtube.js";
 import { createSourceRecord, deleteSourceRecord, findSourceByIdAndWorkspaceId, SourceRecord } from "../repositories/source.repository.js";
 import { NotFoundError } from "../types/app-error.js";
