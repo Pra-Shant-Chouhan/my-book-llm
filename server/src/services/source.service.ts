@@ -2,9 +2,30 @@ import { uploadPdfToCloudinary } from "../lib/cloudinary.js";
 import { scrapeWebsite } from "../lib/firecrawl.js";
 import { extractPdfFromBuffer } from "../lib/pad.js";
 import { fetchYoutubeTranscript } from "../lib/youtube.js";
-import { createSourceRecord } from "../repositories/source.repository.js";
+import { createSourceRecord, deleteSourceRecord, findSourceByIdAndWorkspaceId, SourceRecord } from "../repositories/source.repository.js";
+import { NotFoundError } from "../types/app-error.js";
 import { CreateSourceInput, ImportWebsiteInput, ImportYoutubeInput, ListSourcesQuery } from "../validators/source.validator.js";
 import { getWorkspaceByIdForUser } from "./workspace.service.js";
+
+async function assertWorkspaceAccess(workspaceId: string, userId: string) {
+    await getWorkspaceByIdForUser(workspaceId, userId);
+}
+
+export async function getSourceForWorkspace(
+    workspaceId: string,
+    sourceId: string,
+    userId: string,
+): Promise<SourceRecord> {
+    await assertWorkspaceAccess(workspaceId, userId);
+
+    const source = await findSourceByIdAndWorkspaceId(sourceId, workspaceId);
+
+    if (!source) {
+        throw new NotFoundError("Source not found");
+    }
+
+    return source;
+}
 
 async function createAndProcessSource(
     data: Parameters<typeof createSourceRecord>[0],
@@ -125,3 +146,25 @@ export async function importYoutubeSource(
         },
     });
 }
+
+export async function deleteSourceForWorkspace(
+    workspaceId: string,
+    sourceId: string,
+    userId: string,
+) {
+    await getSourceForWorkspace(workspaceId, sourceId, userId);
+    await deleteSourceRecord(sourceId);
+}
+
+export async function bulkDeleteSourcesForWorkspace(
+    workspaceId: string,
+    userId: string,
+    sourceIds: string[],
+) {
+    await assertWorkspaceAccess(workspaceId, userId);
+
+    for (const sourceId of sourceIds) {
+        await deleteSourceForWorkspace(workspaceId, sourceId, userId);
+    }
+}
+

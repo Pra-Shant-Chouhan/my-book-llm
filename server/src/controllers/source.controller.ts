@@ -3,9 +3,13 @@ import { ValidationError } from "../types/app-error.js";
 import { getZodFieldErrors } from "../utils/zod-error.js";
 import { workspaceIdParamSchema } from "../validators/workspace.validator.js";
 import { bulkDeleteSourcesSchema, createSourceSchema, importWebsiteSchema, importYoutubeSchema, listSourcesQuerySchema, sourceIdParamSchema } from "../validators/source.validator.js";
-import { createTextOrMarkdownSource, importWebsiteSource, importYoutubeSource, listSourcesForWorkspace, uploadPdfSource } from "../services/source.service.js";
+import { createTextOrMarkdownSource, deleteSourceForWorkspace, getSourceForWorkspace, importWebsiteSource, importYoutubeSource, listSourcesForWorkspace, uploadPdfSource } from "../services/source.service.js";
 import { getUserId } from "../lib/getUserId.js";
+import { getWorkspaceByIdForUser } from "../services/workspace.service.js";
 
+async function assertWorkspaceAccess(workspaceId: string, userId: string) {
+    await getWorkspaceByIdForUser(workspaceId, userId);
+}
 function parseWorkspaceId(params: Request["params"]) {
     const parsed = workspaceIdParamSchema.safeParse(params);
 
@@ -43,6 +47,7 @@ function parseListQuery(query: Request["query"]) {
 
     return parsed.data;
 }
+
 function parseCreateBody(body: unknown) {
     const parsed = createSourceSchema.safeParse(body);
 
@@ -68,7 +73,48 @@ function parseBulkDeleteBody(body: unknown) {
 
     return parsed.data;
 }
+export async function getSource(req: Request, res: Response) {
+    const { workspaceId, sourceId } = parseSourceParams(req.params);
+    const source = await getSourceForWorkspace(
+        workspaceId,
+        sourceId,
+        getUserId(req),
+    );
+    res.json(source);
+}
 
+export async function bulkDeleteSourcesForWorkspace(
+    workspaceId: string,
+    userId: string,
+    sourceIds: string[],
+) {
+    await assertWorkspaceAccess(workspaceId, userId);
+
+    for (const sourceId of sourceIds) {
+        await deleteSourceForWorkspace(workspaceId, sourceId, userId);
+    }
+}
+
+export async function deleteSource(req: Request, res: Response) {
+    const { workspaceId, sourceId } = parseSourceParams(req.params);
+    await deleteSourceForWorkspace(
+        workspaceId,
+        sourceId,
+        getUserId(req),
+    );
+    res.status(204).send();
+}
+
+export async function bulkDeleteSources(req: Request, res: Response) {
+    const { workspaceId } = parseWorkspaceId(req.params);
+    const input = parseBulkDeleteBody(req.body);
+    await bulkDeleteSourcesForWorkspace(
+        workspaceId,
+        getUserId(req),
+        input.sourceIds,
+    );
+    res.status(204).send();
+}
 export async function listSources(req: Request, res: Response) {
     const { workspaceId } = parseWorkspaceId(req.params);
     const filters = parseListQuery(req.query);

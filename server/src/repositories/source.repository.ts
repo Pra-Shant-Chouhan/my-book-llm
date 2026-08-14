@@ -70,3 +70,20 @@ export function findSourcesByWorkspaceId(
         orderBy: { createdAt: "desc" },
     });
 }
+
+export async function deleteSourceRecord(sourceId: string) {
+    await prisma.source.delete({
+        where: { id: sourceId },
+    });
+}
+
+
+export function findSourceByIdAndWorkspaceId(
+    sourceId: string,
+    workspaceId: string,
+) {
+    return prisma.source.findFirst({
+        where: { id: sourceId, workspaceId },
+        select: sourceSelect,
+    });
+}
