@@ -8,11 +8,7 @@ import { ValidationError } from "../types/app-error.js";
 import { getZodFieldErrors } from "../utils/zod-error.js";
 import { createMemorySchema, memoryIdParamSchema, updateMemorySchema } from "../validators/memory.validator.js";
 import { getUserId } from "../lib/getUserId.js";
-// import {
-//     createMemorySchema,
-//     memoryIdParamSchema,
-//     updateMemorySchema,
-// } from "../validators/memory.validator.js";
+
 
 function parseMemoryId(params: Request["params"]) {
     const parsed = memoryIdParamSchema.safeParse(params);
